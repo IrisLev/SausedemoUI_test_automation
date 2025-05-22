@@ -36,3 +36,24 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+# Credentials
+src/test/resources/credentials.properties
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+
+# Build output
+target/
+surefire-reports/
+test-output/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db

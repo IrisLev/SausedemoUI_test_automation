@@ -140,3 +140,58 @@ If you encounter issues running the tests:
 1. Ensure Java and Maven are properly installed
 2. Try reinstalling Playwright browsers: `mvn exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install"`
 3. Check for network connectivity to the SauceDemo website
+
+## CI/CD Integration
+
+This project uses GitHub Actions for continuous integration and deployment. The CI/CD pipeline:
+
+1. **Builds and Tests**
+   - Runs on every push to main and pull requests
+   - Uses JDK 24
+   - Installs required Playwright browsers
+   - Executes all tests in parallel
+   - Generates test reports
+
+2. **Test Reporting**
+   - Generates detailed test reports using Maven Surefire
+   - Publishes test results as GitHub Actions artifacts
+   - Creates a test summary in pull requests
+   - Stores test reports for 30 days
+
+3. **Failure Handling**
+   - Creates GitHub issues for test failures
+   - Provides detailed failure information
+   - Links to the specific workflow run
+
+### Running Tests in CI
+
+The CI pipeline uses the following commands:
+```bash
+# Install Playwright browsers
+mvn playwright install
+
+# Run tests with reporting
+mvn clean verify
+
+# Generate test report
+mvn surefire-report:report
+```
+
+### Viewing Test Results
+
+Test results can be found in:
+1. GitHub Actions artifacts (target/surefire-reports/)
+2. Pull request checks
+3. GitHub Actions workflow summary
+
+### Local Development
+
+To run tests locally with the same configuration as CI:
+```bash
+mvn clean verify
+```
+
+To generate test reports locally:
+```bash
+mvn surefire-report:report
+```
