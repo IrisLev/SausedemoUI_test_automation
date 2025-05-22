@@ -75,16 +75,6 @@ public class CheckoutPage extends BasePage {
     }
 
     /**
-     * Get the total price from the checkout overview.
-     *
-     * @return Total price as a double
-     */
-    public double getTotalPrice() {
-        String totalText = page.textContent(summaryTotalSelector).replace("Total: $", "");
-        return Double.parseDouble(totalText);
-    }
-
-    /**
      * Complete the checkout process by clicking the finish button.
      *
      * @return CheckoutCompletePage instance

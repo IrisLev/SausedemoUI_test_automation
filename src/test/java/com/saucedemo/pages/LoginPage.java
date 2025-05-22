@@ -1,10 +1,9 @@
 package com.saucedemo.pages;
 
 import com.microsoft.playwright.Page;
-import com.saucedemo.config.TestConfig;
 
 /**
- * Page object for the login page.
+ * Page object representing the login page of SauceDemo website.
  */
 public class LoginPage extends BasePage {
     // Selectors
@@ -79,11 +78,15 @@ public class LoginPage extends BasePage {
     }
 
     /**
-     * Get the error message if login fails.
-     * @return The error message text
+     * Get error message text if present.
+     *
+     * @return Error message text or empty string if no error
      */
     public String getErrorMessage() {
-        return page.locator("[data-test='error']").textContent();
+        if (elementExists(errorMessageSelector)) {
+            return page.textContent(errorMessageSelector);
+        }
+        return "";
     }
 
     /**
@@ -93,48 +96,5 @@ public class LoginPage extends BasePage {
      */
     public boolean isLoginSuccessful() {
         return getCurrentUrl().contains("/inventory.html");
-    }
-
-    /**
-     * Check if the user is logged in.
-     * @return true if logged in, false otherwise
-     */
-    public boolean isLoggedIn() {
-        return !isOnLoginPage() && page.url().contains("/inventory.html");
-    }
-
-    /**
-     * Check if currently on the login page.
-     * @return true if on login page, false otherwise
-     */
-    public boolean isOnLoginPage() {
-        return page.url().equals(baseUrl) || page.url().equals(baseUrl + "/");
-    }
-
-    /**
-     * Enter username without submitting.
-     * @param username The username to enter
-     */
-    public void fillUsername(String username) {
-        page.fill("#user-name", username);
-    }
-
-    /**
-     * Enter password without submitting.
-     * @param password The password to enter
-     */
-    public void fillPassword(String password) {
-        page.fill("#password", password);
-    }
-
-    /**
-     * Login with username and password.
-     * @param username The username to login with
-     * @param password The password to login with
-     */
-    public void login(String username, String password) {
-        fillUsername(username);
-        fillPassword(password);
-        page.click("#login-button");
     }
 }

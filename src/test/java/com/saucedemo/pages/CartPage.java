@@ -14,7 +14,6 @@ public class CartPage extends BasePage {
     private final String cartItemSelector = ".cart_item";
     private final String itemNameSelector = ".inventory_item_name";
     private final String itemPriceSelector = ".inventory_item_price";
-    private final String removeButtonSelector = "button[id^='remove-']";
     private final String checkoutButtonSelector = "#checkout";
 
     /**
@@ -55,15 +54,6 @@ public class CartPage extends BasePage {
         return getCartItems().containsKey(itemName);
     }
 
-    /**
-     * Get the price of an item in the cart by name.
-     *
-     * @param itemName Name of the item
-     * @return Price of the item or null if item is not in the cart
-     */
-    public Double getItemPrice(String itemName) {
-        return getCartItems().get(itemName);
-    }
 
     /**
      * Remove an item from the cart by name.
