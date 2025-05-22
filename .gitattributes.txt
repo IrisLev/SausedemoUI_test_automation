@@ -1,0 +1,23 @@
+# Always use LF for source files—Git will convert on checkout if configured
+*.java   text eol=lf
+*.xml    text eol=lf
+*.js     text eol=lf
+*.ts     text eol=lf
+*.json   text eol=lf
+*.md     text eol=lf
+*.sh     text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
+
+# Treat all text files as text and auto-normalize line endings
+*        text=auto
+
+# Binary files - do not modify
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.ico    binary
+*.exe    binary
+*.jar    binary
+*.class  binary
