@@ -56,4 +56,14 @@ public class CheckoutCompletePage extends BasePage {
     public boolean isOrderConfirmationDisplayed() {
         return elementExists(completeHeaderSelector) && elementExists(completeTextSelector);
     }
+
+    /**
+     * Navigate back to the products page.
+     *
+     * @return InventoryPage instance
+     */
+    public InventoryPage backToProducts() {
+        page.click(backHomeButtonSelector);
+        return new InventoryPage(page);
+    }
 }

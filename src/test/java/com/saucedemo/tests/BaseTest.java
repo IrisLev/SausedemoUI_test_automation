@@ -287,4 +287,18 @@ public class BaseTest {
             page.click(selector);
         }, "Click " + description);
     }
+
+    /**
+     * Fill a form field with retry mechanism.
+     *
+     * @param selector Field selector
+     * @param value Value to fill
+     * @param description Description of the field
+     */
+    protected void fillWithRetry(String selector, String value, String description) {
+        retryOnFailure(() -> {
+            logAction("Filling " + description);
+            page.fill(selector, value);
+        }, "Fill " + description);
+    }
 }

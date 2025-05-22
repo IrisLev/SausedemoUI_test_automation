@@ -31,4 +31,7 @@ public class BasePage {
     /**
      * Wait for navigation to complete.
      */
+ /*   public void waitForNavigation() {
+        page.waitForLoadState();
+    }*/
 }
