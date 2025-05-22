@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  */
 public class InventoryPage extends BasePage {
     private static final Logger logger = LoggerFactory.getLogger(InventoryPage.class);
-    
+
     // Selectors
     private final String inventoryItemSelector = ".inventory_item";
     private final String itemNameSelector = ".inventory_item_name";

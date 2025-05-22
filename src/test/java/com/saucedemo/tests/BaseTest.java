@@ -3,6 +3,8 @@ package com.saucedemo.tests;
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.LoadState;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +15,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Base test class that all test classes will inherit from.
  * Sets up and tears down Playwright resources with comprehensive logging.
+ * Supports parallel test execution.
  */
+@Execution(ExecutionMode.CONCURRENT)
 public class BaseTest {
     // Logger instance
     protected static final Logger logger = LoggerFactory.getLogger(BaseTest.class);
@@ -31,9 +35,9 @@ public class BaseTest {
     private static final int RETRY_DELAY_MS = 1000;
     private static final int DEFAULT_TIMEOUT_MS = 30000;
     private static final List<String> IGNORED_ERROR_PATTERNS = List.of(
-        ".*401.*",  // Ignore unauthorized errors
-        ".*favicon.ico.*",  // Ignore favicon errors
-        ".*analytics.*"  // Ignore analytics errors
+            ".*401.*",  // Ignore unauthorized errors
+            ".*favicon.ico.*",  // Ignore favicon errors
+            ".*analytics.*"  // Ignore analytics errors
     );
 
     // Test credentials
@@ -67,6 +71,7 @@ public class BaseTest {
 
     /**
      * Set up browser before all tests.
+     * Browser instance is shared across all test threads
      */
     @BeforeAll
     public static void launchBrowser() {
@@ -83,22 +88,34 @@ public class BaseTest {
 
     /**
      * Set up context and page before each test.
+     * Each test gets its own isolated browser context
      */
     @BeforeEach
     public void createContextAndPage(TestInfo testInfo) {
         logger.info("--- Starting Test: {} ---", testInfo.getDisplayName());
         logger.debug("Creating new browser context and page");
 
-        // Create context with network handling
-        context = browser.newContext(new Browser.NewContextOptions()
-                .setIgnoreHTTPSErrors(true));
-        page.setDefaultTimeout(DEFAULT_TIMEOUT_MS);
+        try {
+            // Create context with network handling
+            context = browser.newContext(new Browser.NewContextOptions()
+                    .setIgnoreHTTPSErrors(true));
 
-        // Create page with network monitoring
-        page = context.newPage();
-        setupNetworkMonitoring();
+            // Create page first
+            page = context.newPage();
 
-        logger.debug("Browser context and page created successfully");
+            // Then set timeout and monitoring
+            page.setDefaultTimeout(DEFAULT_TIMEOUT_MS);
+            setupNetworkMonitoring();
+
+            logger.debug("Browser context and page created successfully");
+        } catch (Exception e) {
+            logger.error("Failed to create browser context and page: {}", e.getMessage());
+            // Clean up if something went wrong
+            if (context != null) {
+                context.close();
+            }
+            throw e;
+        }
     }
 
     /**
@@ -177,8 +194,8 @@ public class BaseTest {
             } catch (PlaywrightException e) {
                 attempts.incrementAndGet();
                 if (attempts.get() == MAX_RETRIES) {
-                    logger.error("Failed to execute '{}' after {} attempts: {}", 
-                        description, MAX_RETRIES, e.getMessage());
+                    logger.error("Failed to execute '{}' after {} attempts: {}",
+                            description, MAX_RETRIES, e.getMessage());
                     throw e;
                 }
                 logger.warn("Attempt {} failed for '{}', retrying...", attempts.get(), description);
@@ -198,14 +215,14 @@ public class BaseTest {
     @AfterEach
     public void closeContext(TestInfo testInfo) {
         logger.info("--- Test Completed: {} ---", testInfo.getDisplayName());
-        
+
         // Report any network issues
         if (!failedRequests.isEmpty()) {
             logger.warn("Network issues encountered during test:");
-            failedRequests.forEach(request -> 
-                logger.warn("  - {}", request));
+            failedRequests.forEach(request ->
+                    logger.warn("  - {}", request));
         }
-        
+
         logger.debug("Closing browser context");
         context.close();
         failedRequests.clear();

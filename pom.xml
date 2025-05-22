@@ -55,9 +55,13 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire.version}</version>
                 <configuration>
-                    <includes>
-                        <include>**/*Test.java</include>
-                    </includes>
+                    <parallel>methods</parallel>
+                    <threadCount>2</threadCount>
+                    <properties>
+                        <configurationParameters>
+                            junit.jupiter.execution.parallel.enabled=true
+                        </configurationParameters>
+                    </properties>
                 </configuration>
             </plugin>
             <plugin>
