@@ -2,6 +2,7 @@ package com.saucedemo.tests;
 
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.LoadState;
+import com.saucedemo.config.TestConfig;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -31,20 +32,16 @@ public class BaseTest {
     protected Page page;
 
     // Network handling configuration
-    private static final int MAX_RETRIES = 3;
-    private static final int RETRY_DELAY_MS = 1000;
-    private static final int DEFAULT_TIMEOUT_MS = 30000;
-    private static final List<String> IGNORED_ERROR_PATTERNS = List.of(
-            ".*401.*",  // Ignore unauthorized errors
-            ".*favicon.ico.*",  // Ignore favicon errors
-            ".*analytics.*"  // Ignore analytics errors
-    );
+    private static final int MAX_RETRIES = TestConfig.getRetryCount();
+    private static final int RETRY_DELAY_MS = TestConfig.getRetryDelay();
+    private static final int DEFAULT_TIMEOUT_MS = TestConfig.getTimeout();
+    private static final List<String> IGNORED_ERROR_PATTERNS = TestConfig.getIgnoredErrorPatterns();
 
     // Test credentials
-    protected static final String VALID_USERNAME = "standard_user";
-    protected static final String VALID_PASSWORD = "secret_sauce";
-    protected static final String INVALID_USERNAME = "invalid_user";
-    protected static final String INVALID_PASSWORD = "invalid_password";
+    protected static final String VALID_USERNAME = TestConfig.getValidUsername();
+    protected static final String VALID_PASSWORD = TestConfig.getValidPassword();
+    protected static final String INVALID_USERNAME = TestConfig.getInvalidUsername();
+    protected static final String INVALID_PASSWORD = TestConfig.getInvalidPassword();
 
     // Track failed requests for reporting
     private final List<FailedRequest> failedRequests = new ArrayList<>();
@@ -80,8 +77,8 @@ public class BaseTest {
 
         playwright = Playwright.create();
         browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
-                .setHeadless(true)
-                .setSlowMo(50));
+                .setHeadless(TestConfig.isHeadless())
+                .setSlowMo(TestConfig.getSlowMo()));
 
         logger.info("Browser launched successfully");
     }

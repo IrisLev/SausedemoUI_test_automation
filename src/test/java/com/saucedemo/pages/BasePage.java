@@ -1,6 +1,7 @@
 package com.saucedemo.pages;
 
 import com.microsoft.playwright.Page;
+import com.saucedemo.config.TestConfig;
 
 /**
  /* Base page class that all page objects will inherit from.
@@ -8,7 +9,7 @@ import com.microsoft.playwright.Page;
  */
 public class BasePage {
     protected final Page page;
-    protected final String baseUrl = "https://www.saucedemo.com";
+    protected final String baseUrl = TestConfig.getBaseUrl();
 
 
     public BasePage(Page page) {
