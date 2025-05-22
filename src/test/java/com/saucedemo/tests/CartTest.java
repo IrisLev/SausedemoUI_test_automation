@@ -5,6 +5,8 @@ import com.saucedemo.pages.InventoryPage;
 import com.saucedemo.pages.LoginPage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
@@ -14,6 +16,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test class for testing the cart functionality of SauceDemo website.
  */
 public class CartTest extends BaseTest {
+    private static final Logger logger = LoggerFactory.getLogger(CartTest.class);
+    
     private LoginPage loginPage;
     private InventoryPage inventoryPage;
     private String expensiveItemName;
@@ -34,7 +38,23 @@ public class CartTest extends BaseTest {
     }
 
     /**
-     * Test adding items to cart.
+     * Test inventory price validation.
+     * Verifies that the inventory has valid prices and handles edge cases.
+     */
+    @Test
+    public void testInventoryPriceValidation() {
+        try {
+            inventoryPage.validateInventoryPrices();
+            logger.info("Inventory price validation passed");
+        } catch (IllegalStateException e) {
+            logger.error("Inventory price validation failed: {}", e.getMessage());
+            fail("Inventory price validation failed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Test adding items to cart with price validation.
+     * - Validates inventory prices
      * - Add the most expensive item to the cart
      * - Add the most cheap item to the cart
      * - Verify the items were added to the cart
@@ -42,23 +62,40 @@ public class CartTest extends BaseTest {
      */
     @Test
     public void testAddItemsToCart() {
+        // Validate inventory prices first
+        try {
+            inventoryPage.validateInventoryPrices();
+        } catch (IllegalStateException e) {
+            logger.error("Cannot proceed with test due to inventory validation failure: {}", e.getMessage());
+            fail("Inventory validation failed: " + e.getMessage());
+            return;
+        }
+
         // Get the most expensive item and add it to cart
-        Map.Entry<String, Double> mostExpensiveItem = inventoryPage.getMostExpensiveItem();
-        assertNotNull(mostExpensiveItem, "Most expensive item should not be null");
-
-        expensiveItemName = mostExpensiveItem.getKey();
-        expensiveItemPrice = mostExpensiveItem.getValue();
-
-        inventoryPage.addItemToCartByName(expensiveItemName);
+        try {
+            Map.Entry<String, Double> mostExpensiveItem = inventoryPage.getMostExpensiveItem();
+            expensiveItemName = mostExpensiveItem.getKey();
+            expensiveItemPrice = mostExpensiveItem.getValue();
+            logger.info("Adding most expensive item to cart: {} (${})", expensiveItemName, expensiveItemPrice);
+            inventoryPage.addItemToCartByName(expensiveItemName);
+        } catch (IllegalStateException e) {
+            logger.error("Failed to add most expensive item: {}", e.getMessage());
+            fail("Failed to add most expensive item: " + e.getMessage());
+            return;
+        }
 
         // Get the cheapest item and add it to cart
-        Map.Entry<String, Double> cheapestItem = inventoryPage.getCheapestItem();
-        assertNotNull(cheapestItem, "Cheapest item should not be null");
-
-        cheapItemName = cheapestItem.getKey();
-        cheapItemPrice = cheapestItem.getValue();
-
-        inventoryPage.addItemToCartByName(cheapItemName);
+        try {
+            Map.Entry<String, Double> cheapestItem = inventoryPage.getCheapestItem();
+            cheapItemName = cheapestItem.getKey();
+            cheapItemPrice = cheapestItem.getValue();
+            logger.info("Adding cheapest item to cart: {} (${})", cheapItemName, cheapItemPrice);
+            inventoryPage.addItemToCartByName(cheapItemName);
+        } catch (IllegalStateException e) {
+            logger.error("Failed to add cheapest item: {}", e.getMessage());
+            fail("Failed to add cheapest item: " + e.getMessage());
+            return;
+        }
 
         // Verify cart count is 2
         assertEquals(2, inventoryPage.getCartItemCount(), "Cart should contain 2 items");

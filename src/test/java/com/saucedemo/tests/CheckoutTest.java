@@ -4,6 +4,8 @@ import com.saucedemo.pages.*;
 import com.saucedemo.utils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
@@ -13,6 +15,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test class for testing the checkout functionality of SauceDemo website.
  */
 public class CheckoutTest extends BaseTest {
+    private static final Logger logger = LoggerFactory.getLogger(CheckoutTest.class);
+
     private LoginPage loginPage;
     private InventoryPage inventoryPage;
     private CartPage cartPage;
@@ -30,14 +34,52 @@ public class CheckoutTest extends BaseTest {
 
         inventoryPage = new InventoryPage(page);
 
+        // Validate inventory prices before proceeding
+        try {
+            inventoryPage.validateInventoryPrices();
+        } catch (IllegalStateException e) {
+            logger.error("Cannot proceed with test setup due to inventory validation failure: {}", e.getMessage());
+            fail("Inventory validation failed: " + e.getMessage());
+            return;
+        }
+
         // Add most expensive item to cart
-        expensiveItemName = inventoryPage.addMostExpensiveItemToCart();
+        try {
+            expensiveItemName = inventoryPage.addMostExpensiveItemToCart();
+            logger.info("Added most expensive item to cart: {}", expensiveItemName);
+        } catch (IllegalStateException e) {
+            logger.error("Failed to add most expensive item: {}", e.getMessage());
+            fail("Failed to add most expensive item: " + e.getMessage());
+            return;
+        }
 
         // Add cheapest item to cart
-        cheapItemName = inventoryPage.addCheapestItemToCart();
+        try {
+            cheapItemName = inventoryPage.addCheapestItemToCart();
+            logger.info("Added cheapest item to cart: {}", cheapItemName);
+        } catch (IllegalStateException e) {
+            logger.error("Failed to add cheapest item: {}", e.getMessage());
+            fail("Failed to add cheapest item: " + e.getMessage());
+            return;
+        }
 
         // Navigate to cart
         cartPage = inventoryPage.navigateToCart();
+    }
+
+    /**
+     * Test inventory price validation.
+     * Verifies that the inventory has valid prices and handles edge cases.
+     */
+    @Test
+    public void testInventoryPriceValidation() {
+        try {
+            inventoryPage.validateInventoryPrices();
+            logger.info("Inventory price validation passed");
+        } catch (IllegalStateException e) {
+            logger.error("Inventory price validation failed: {}", e.getMessage());
+            fail("Inventory price validation failed: " + e.getMessage());
+        }
     }
 
     /**
@@ -89,19 +131,25 @@ public class CheckoutTest extends BaseTest {
         // Verify successful checkout
         assertTrue(completePage.isOrderConfirmationDisplayed(), "Order confirmation should be displayed");
 
-        // Add more detailed logging
-        System.out.println("Current URL: " + page.url());
-        System.out.println("Is header element visible: " + page.isVisible(completePage.getCompleteHeaderSelector()));
+        // Get and verify header text
         String headerText = completePage.getCompleteHeaderText();
-        System.out.println("Actual header text: '" + headerText + "'");
-        System.out.println("Header text length: " + (headerText != null ? headerText.length() : "null"));
-        System.out.println("Header text contains 'THANK': " + (headerText != null ? headerText.contains("THANK") : "null"));
-        System.out.println("Header text contains 'ORDER': " + (headerText != null ? headerText.contains("ORDER") : "null"));
+        logger.info("Order confirmation header: '{}'", headerText);
 
         assertNotNull(headerText, "Complete header text should not be null");
-       // assertTrue(headerText.contains("THANK YOU FOR YOUR ORDER"), "Complete header should contain 'THANK YOU FOR YOUR ORDER'");
+        assertEquals("Thank you for your order!", headerText,
+                "Complete header should match expected text exactly");
 
+        // Verify header text contains expected phrases (case-insensitive)
+        String headerTextLower = headerText.toLowerCase();
+        assertTrue(headerTextLower.contains("thank"),
+                "Complete header should contain 'thank' (case-insensitive)");
+        assertTrue(headerTextLower.contains("order"),
+                "Complete header should contain 'order' (case-insensitive)");
+
+        // Get and verify complete text
         String completeText = completePage.getCompleteText();
+        logger.info("Order confirmation text: '{}'", completeText);
+
         assertNotNull(completeText, "Complete text should not be null");
         assertTrue(completeText.contains("Your order has been dispatched"),
                 "Complete text should mention order dispatched");

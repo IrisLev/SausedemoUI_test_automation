@@ -2,6 +2,9 @@ package com.saucedemo.pages;
 
 import com.microsoft.playwright.ElementHandle;
 import com.microsoft.playwright.Page;
+import com.saucedemo.utils.InventoryValidationUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -14,6 +17,8 @@ import java.util.stream.Collectors;
  * Page object representing the inventory page of SauceDemo website.
  */
 public class InventoryPage extends BasePage {
+    private static final Logger logger = LoggerFactory.getLogger(InventoryPage.class);
+    
     // Selectors
     private final String inventoryItemSelector = ".inventory_item";
     private final String itemNameSelector = ".inventory_item_name";
@@ -74,27 +79,64 @@ public class InventoryPage extends BasePage {
     }
 
     /**
-     * Get the most expensive item.
+     * Validates the inventory prices and logs any issues found.
      *
-     * @return Map.Entry containing the name and price of the most expensive item
+     * @throws IllegalStateException if critical price validation issues are found
      */
-    public Map.Entry<String, Double> getMostExpensiveItem() {
-        Map<String, Double> itemPrices = getAllItemsWithPrices();
-        return itemPrices.entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .orElse(null);
+    public void validateInventoryPrices() {
+        List<ElementHandle> items = getAllInventoryItems();
+        Map<String, Object> validationResults = InventoryValidationUtils.validateInventoryPrices(items, itemPriceSelector);
+
+        // Log validation results
+        if ((Boolean) validationResults.get("hasMissingPrices")) {
+            List<String> itemsWithMissingPrices = (List<String>) validationResults.get("itemsWithMissingPrices");
+            logger.error("Found items with missing prices: {}", itemsWithMissingPrices);
+            throw new IllegalStateException("Items with missing prices found: " + itemsWithMissingPrices);
+        }
+
+        if ((Boolean) validationResults.get("hasMultipleLowestPrice")) {
+            List<String> itemsWithLowestPrice = (List<String>) validationResults.get("itemsWithLowestPrice");
+            logger.warn("Multiple items found with lowest price: {}", itemsWithLowestPrice);
+        }
+
+        if ((Boolean) validationResults.get("hasMultipleHighestPrice")) {
+            List<String> itemsWithHighestPrice = (List<String>) validationResults.get("itemsWithHighestPrice");
+            logger.warn("Multiple items found with highest price: {}", itemsWithHighestPrice);
+        }
     }
 
     /**
-     * Get the cheapest item.
+     * Get the most expensive item with validation.
+     *
+     * @return Map.Entry containing the name and price of the most expensive item
+     * @throws IllegalStateException if no valid items are found or if there are price validation issues
+     */
+    public Map.Entry<String, Double> getMostExpensiveItem() {
+        validateInventoryPrices();
+        Map<String, Double> itemPrices = getAllItemsWithPrices();
+        if (itemPrices.isEmpty()) {
+            throw new IllegalStateException("No valid items found in inventory");
+        }
+        return itemPrices.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .orElseThrow(() -> new IllegalStateException("Failed to find most expensive item"));
+    }
+
+    /**
+     * Get the cheapest item with validation.
      *
      * @return Map.Entry containing the name and price of the cheapest item
+     * @throws IllegalStateException if no valid items are found or if there are price validation issues
      */
     public Map.Entry<String, Double> getCheapestItem() {
+        validateInventoryPrices();
         Map<String, Double> itemPrices = getAllItemsWithPrices();
+        if (itemPrices.isEmpty()) {
+            throw new IllegalStateException("No valid items found in inventory");
+        }
         return itemPrices.entrySet().stream()
                 .min(Map.Entry.comparingByValue())
-                .orElse(null);
+                .orElseThrow(() -> new IllegalStateException("Failed to find cheapest item"));
     }
 
     /**
