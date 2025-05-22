@@ -18,15 +18,9 @@ public class InventoryPage extends BasePage {
     private final String inventoryItemSelector = ".inventory_item";
     private final String itemNameSelector = ".inventory_item_name";
     private final String itemPriceSelector = ".inventory_item_price";
-    private final String addToCartButtonSelector = "button[id^='add-to-cart']";
     private final String cartBadgeSelector = ".shopping_cart_badge";
     private final String cartLinkSelector = ".shopping_cart_link";
 
-    /**
-     * Constructor for the InventoryPage.
-     *
-     * @param page Playwright Page object
-     */
     public InventoryPage(Page page) {
         super(page);
     }
