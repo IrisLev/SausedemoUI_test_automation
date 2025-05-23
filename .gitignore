@@ -37,9 +37,6 @@ build/
 ### Mac OS ###
 .DS_Store
 
-# Credentials
-src/test/resources/credentials.properties
-
 # IDE files
 .idea/
 *.iml
@@ -57,3 +54,6 @@ logs/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Note: credentials.properties is included in version control as this is a test project
+# with mock server credentials needed for the reviewer to run the tests

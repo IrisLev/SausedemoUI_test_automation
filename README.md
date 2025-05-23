@@ -1,6 +1,6 @@
 # SauceDemo Playwright Automation Project
 
-This project contains automated tests for the SauceDemo website using Playwright framework with Java and JUnit 5.
+This project contains automated tests for the SauceDemo website using Playwright framework with Java and JUnit 5. This is a test project/homework assignment using a mock server (SauceDemo) for practicing test automation.
 
 ## Overview
 
@@ -25,6 +25,9 @@ The automation suite covers the following test scenarios:
 ```
 ├── src
 │   └── test
+│       ├── resources
+│       │   ├── config.properties        # Test configuration
+│       │   └── credentials.properties   # Test credentials for mock server
 │       └── java
 │           └── com
 │               └── saucedemo
@@ -68,6 +71,11 @@ The automation suite covers the following test scenarios:
 
    This will download all required dependencies including the Playwright browser binaries.
 
+3. **Test Credentials**
+   - The project includes `credentials.properties` with test credentials for the mock server
+   - These are test credentials only and are included in version control as this is a test project
+   - The credentials are used for testing various scenarios including security tests
+
 ## Running Tests
 
 ### Run all tests
@@ -101,6 +109,15 @@ The project follows the Page Object Model design pattern to separate test logic 
 - **InventoryPage**: Manages product listing and adding items to cart
 - **CartPage**: Handles cart operations like viewing and removing items
 - **CheckoutPage**: Manages checkout form and confirmation
+
+### Test Credentials Management
+
+- Test credentials are stored in `credentials.properties`
+- Includes various test users for different scenarios:
+  - Valid users (standard_user, problem_user, performance_glitch_user)
+  - Invalid users (locked_out_user, invalid_user)
+  - Special test cases (XSS and SQL injection attempts)
+- Credentials are included in version control as this is a test project using a mock server
 
 ### Dynamic Element Handling
 
