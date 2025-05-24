@@ -116,4 +116,56 @@ public class CartTest extends BaseTest {
         assertEquals(cheapItemPrice, cartItems.get(cheapItemName), 0.01,
                 "Cheap item price should match");
     }
+
+    /**
+     * Test removing most expensive item and proceeding to checkout.
+     * - Adds most expensive and cheapest items to cart
+     * - Navigates to cart page
+     * - Removes the most expensive item
+     * - Verifies only cheapest item remains
+     * - Proceeds to checkout
+     */
+    @Test
+    public void testRemoveMostExpensiveAndCheckout() {
+        // First add both items to cart
+        try {
+            Map.Entry<String, Double> mostExpensiveItem = inventoryPage.getMostExpensiveItem();
+            expensiveItemName = mostExpensiveItem.getKey();
+            expensiveItemPrice = mostExpensiveItem.getValue();
+            logger.info("Adding most expensive item to cart: {} (${})", expensiveItemName, expensiveItemPrice);
+            inventoryPage.addItemToCartByName(expensiveItemName);
+
+            Map.Entry<String, Double> cheapestItem = inventoryPage.getCheapestItem();
+            cheapItemName = cheapestItem.getKey();
+            cheapItemPrice = cheapestItem.getValue();
+            logger.info("Adding cheapest item to cart: {} (${})", cheapItemName, cheapItemPrice);
+            inventoryPage.addItemToCartByName(cheapItemName);
+        } catch (IllegalStateException e) {
+            logger.error("Failed to add items to cart: {}", e.getMessage());
+            fail("Failed to add items to cart: " + e.getMessage());
+            return;
+        }
+
+        // Navigate to cart
+        CartPage cartPage = inventoryPage.navigateToCart();
+        
+        // Verify initial cart state
+        assertEquals(2, cartPage.getCartItemCount(), "Cart should initially contain 2 items");
+        
+        // Remove most expensive item
+        String removedItem = cartPage.removeMostExpensiveItem();
+        logger.info("Removed most expensive item: {}", removedItem);
+        
+        // Verify correct item was removed
+        assertEquals(expensiveItemName, removedItem, "Should have removed the most expensive item");
+        
+        // Verify cart now only contains cheapest item
+        assertEquals(1, cartPage.getCartItemCount(), "Cart should now contain only 1 item");
+        assertTrue(cartPage.isItemInCart(cheapItemName), "Cheapest item should still be in cart");
+        assertFalse(cartPage.isItemInCart(expensiveItemName), "Most expensive item should be removed");
+        
+        // Proceed to checkout
+        cartPage.proceedToCheckout();
+        logger.info("Proceeded to checkout page");
+    }
 }

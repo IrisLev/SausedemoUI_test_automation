@@ -10,23 +10,6 @@ import java.util.stream.Collectors;
 public class InventoryValidationUtils {
     
     /**
-     * Validates if there are any items with missing prices.
-     *
-     * @param items List of inventory item elements
-     * @param priceSelector CSS selector for price element
-     * @return List of item names that have missing prices
-     */
-    public static List<String> findItemsWithMissingPrices(List<ElementHandle> items, String priceSelector) {
-        return items.stream()
-                .filter(item -> {
-                    ElementHandle priceElement = item.querySelector(priceSelector);
-                    return priceElement == null || priceElement.textContent().trim().isEmpty();
-                })
-                .map(item -> item.querySelector(".inventory_item_name").textContent())
-                .collect(Collectors.toList());
-    }
-
-    /**
      * Finds items that share the lowest price.
      *
      * @param itemsWithPrices Map of item names and their prices
@@ -77,36 +60,52 @@ public class InventoryValidationUtils {
      */
     public static Map<String, Object> validateInventoryPrices(List<ElementHandle> items, String priceSelector) {
         Map<String, Object> validationResults = new HashMap<>();
+        Map<String, Double> itemsWithPrices = new HashMap<>();
+        List<String> itemsWithMissingPrices = new ArrayList<>();
         
-        // Check for missing prices
-        List<String> itemsWithMissingPrices = findItemsWithMissingPrices(items, priceSelector);
+        // Single pass through items to collect valid prices and identify invalid ones
+        items.forEach(item -> {
+            String name = item.querySelector(".inventory_item_name").textContent();
+            ElementHandle priceElement = item.querySelector(priceSelector);
+            
+            // Check if price is missing or empty
+            if (priceElement == null || priceElement.textContent().trim().isEmpty()) {
+                itemsWithMissingPrices.add(name);
+                return;
+            }
+            
+            // Try to parse price
+            try {
+                String priceText = priceElement.textContent().replace("$", "");
+                double price = Double.parseDouble(priceText);
+                itemsWithPrices.put(name, price);
+            } catch (NumberFormatException e) {
+                itemsWithMissingPrices.add(name);
+            }
+        });
+
+        // Store validation results for missing prices
         validationResults.put("hasMissingPrices", !itemsWithMissingPrices.isEmpty());
         validationResults.put("itemsWithMissingPrices", itemsWithMissingPrices);
+        
+        // Only perform price comparisons if we have valid prices
+        if (!itemsWithPrices.isEmpty()) {
+            // Check for items with lowest price
+            List<String> itemsWithLowestPrice = findItemsWithLowestPrice(itemsWithPrices);
+            validationResults.put("hasMultipleLowestPrice", itemsWithLowestPrice.size() > 1);
+            validationResults.put("itemsWithLowestPrice", itemsWithLowestPrice);
 
-        // Get all items with valid prices
-        Map<String, Double> itemsWithPrices = new HashMap<>();
-        items.stream()
-                .filter(item -> item.querySelector(priceSelector) != null)
-                .forEach(item -> {
-                    String name = item.querySelector(".inventory_item_name").textContent();
-                    String priceText = item.querySelector(priceSelector).textContent().replace("$", "");
-                    try {
-                        double price = Double.parseDouble(priceText);
-                        itemsWithPrices.put(name, price);
-                    } catch (NumberFormatException e) {
-                        itemsWithMissingPrices.add(name);
-                    }
-                });
-
-        // Check for items with lowest price
-        List<String> itemsWithLowestPrice = findItemsWithLowestPrice(itemsWithPrices);
-        validationResults.put("hasMultipleLowestPrice", itemsWithLowestPrice.size() > 1);
-        validationResults.put("itemsWithLowestPrice", itemsWithLowestPrice);
-
-        // Check for items with highest price
-        List<String> itemsWithHighestPrice = findItemsWithHighestPrice(itemsWithPrices);
-        validationResults.put("hasMultipleHighestPrice", itemsWithHighestPrice.size() > 1);
-        validationResults.put("itemsWithHighestPrice", itemsWithHighestPrice);
+            // Check for items with highest price
+            List<String> itemsWithHighestPrice = findItemsWithHighestPrice(itemsWithPrices);
+            validationResults.put("hasMultipleHighestPrice", itemsWithHighestPrice.size() > 1);
+            validationResults.put("itemsWithHighestPrice", itemsWithHighestPrice);
+        } else {
+            // If no valid prices found, set default values
+            validationResults.put("hasMultipleLowestPrice", false);
+            validationResults.put("itemsWithLowestPrice", Collections.emptyList());
+            validationResults.put("hasMultipleHighestPrice", false);
+            validationResults.put("itemsWithHighestPrice", Collections.emptyList());
+        }
 
         return validationResults;
     }
